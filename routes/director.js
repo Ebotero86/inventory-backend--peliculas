@@ -1,7 +1,7 @@
 const { Router } = require('express');
-const Brand = require('../models/Director');
-const { validationResult, check } = require('express-validator');
 const Director = require('../models/Director');
+const { validationResult, check } = require('express-validator');
+
 
 const router = Router();
 

@@ -4,6 +4,7 @@ const { validationResult, check } = require('express-validator');
 
 const router = Router();
 
+
 router.get('/', async function(req, res) {
     try {
         const media = await Media.find(); 
@@ -11,29 +12,41 @@ router.get('/', async function(req, res) {
 
     } catch (error) {
         console.log(error);
-        res.status(500).send('message error')
+        res.status(500).send('Error al obtener las películas');
     }
 });
 
+
 router.post('/', [
     check('serial', 'El campo serial es obligatorio y único').not().isEmpty(),
-    check('titulo', 'El campo titulo es obligatorio').not().isEmpty(),
+    check('titulo', 'El campo título es obligatorio').not().isEmpty(),
     check('sinopsis', 'El campo sinopsis es obligatorio').not().isEmpty(),
     check('url', 'El campo url es obligatorio y único').not().isEmpty(),
     check('imagen', 'El campo imagen es obligatorio').not().isEmpty(),
     check('anoEstreno', 'El campo año de estreno es obligatorio').isNumeric(),
-    check('generoPrincipal', 'El campo media principal es obligatorio').not().isEmpty(),
+    check('generoPrincipal', 'El campo género principal es obligatorio').not().isEmpty(),
     check('directorPrincipal', 'El campo director principal es obligatorio').not().isEmpty(),
     check('productora', 'El campo productora es obligatorio').not().isEmpty(),
     check('tipo', 'El campo tipo es obligatorio').not().isEmpty()
 ], async function(req, res) {
-
     try {
+        
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ message: errors.array() });
         }
 
+        
+        let existingMedia = await Media.findOne({ serial: req.body.serial });
+        if (existingMedia) {
+            return res.status(400).json({ message: "El serial ya existe." });
+        }
+        existingMedia = await Media.findOne({ url: req.body.url });
+        if (existingMedia) {
+            return res.status(400).json({ message: "La URL ya existe." });
+        }
+
+        
         let media = new Media();
         media.serial = req.body.serial;
         media.titulo = req.body.titulo;
@@ -48,23 +61,25 @@ router.post('/', [
         media.createdAt = new Date();
         media.updatedAt = new Date();
 
+        
         media = await media.save();
-        res.status(201).json(media);  
+        res.send(media);  
 
     } catch (error) {
         console.log(error);
-        res.status(500).send('Error al crear el recurso');
+        res.status(500).send('Error al crear la película');
     }
 });
 
-router.get('/', async function(req, res) {
+
+router.get('/all', async function(req, res) {
     try {
         const media = await Media.find().populate([
             {
-                path: 'director', select: 'name, state'
+                path: 'directorPrincipal', select: 'name, state'
             },
             {
-                path: 'genero', select: 'name, state, description'
+                path: 'generoPrincipal', select: 'name, state, description'
             },
             {
                 path: 'productora', select: 'name, state, slogan, description'
@@ -72,40 +87,41 @@ router.get('/', async function(req, res) {
             {
                 path: 'tipo', select: 'name, description'
             },
-
         ]); 
         res.send(media);
 
     } catch (error) {
         console.log(error);
-        res.status(500).send('message error')
+        res.status(500).send('Error al obtener las películas');
     }
 });
 
+
 router.put('/:mediaId', [
     check('serial', 'El campo serial es obligatorio y único').not().isEmpty(),
-    check('titulo', 'El campo titulo es obligatorio').not().isEmpty(),
+    check('titulo', 'El campo título es obligatorio').not().isEmpty(),
     check('sinopsis', 'El campo sinopsis es obligatorio').not().isEmpty(),
     check('url', 'El campo url es obligatorio y único').not().isEmpty(),
     check('imagen', 'El campo imagen es obligatorio').not().isEmpty(),
     check('anoEstreno', 'El campo año de estreno es obligatorio').isNumeric(),
-    check('generoPrincipal', 'El campo media principal es obligatorio').not().isEmpty(),
+    check('generoPrincipal', 'El campo género principal es obligatorio').not().isEmpty(),
     check('directorPrincipal', 'El campo director principal es obligatorio').not().isEmpty(),
     check('productora', 'El campo productora es obligatorio').not().isEmpty(),
     check('tipo', 'El campo tipo es obligatorio').not().isEmpty()
 ], async function(req, res) {
     try {
+        
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(400).json({ message: errors.array() }); 
+            return res.status(400).json({ message: errors.array() });
         }
 
-    
-        let media = await Media.findById(req.params.mediaId);
         
+        let media = await Media.findById(req.params.mediaId);
         if (!media) {
-            return res.status(400).send({ message: 'media not found' });
+            return res.status(400).send({ message: 'Película no encontrada' });
         }
+
         
         media.serial = req.body.serial;
         media.titulo = req.body.titulo;
@@ -116,15 +132,16 @@ router.put('/:mediaId', [
         media.generoPrincipal = req.body.generoPrincipal;
         media.directorPrincipal = req.body.directorPrincipal;
         media.productora = req.body.productora;
-        media.tipo = req.body.tipo;               
+        media.tipo = req.body.tipo;
         media.updatedAt = new Date();
+        
         
         media = await media.save();
         res.send(media);
 
     } catch (error) {
         console.log(error);
-        res.status(500).send('message error');
+        res.status(500).send('Error al actualizar la película');
     }
 });
 

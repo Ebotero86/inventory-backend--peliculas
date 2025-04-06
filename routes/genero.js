@@ -73,6 +73,4 @@ router.put('/:generoId', [
     }
 });
 
-
-
 module.exports = router;
