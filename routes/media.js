@@ -96,6 +96,36 @@ router.get('/all', async function(req, res) {
     }
 });
 
+router.get('/:mediaId', async function(req, res) {
+    try {
+      const media = await Media.findById(req.params.mediaId).populate([
+        {
+          path: 'directorPrincipal', select: 'name state'
+        },
+        {
+          path: 'generoPrincipal', select: 'name state description'
+        },
+        {
+          path: 'productora', select: 'name state slogan description'
+        },
+        {
+          path: 'tipo', select: 'name description'
+        }
+      ]);
+  
+      if (!media) {
+        return res.status(404).send({ message: 'Película no encontrada' });
+      }
+  
+      res.send(media);
+  
+    } catch (error) {
+      console.log(error);
+      res.status(500).send('Error al obtener la película por ID');
+    }
+  });
+  
+
 
 router.put('/:mediaId', [
     check('serial', 'El campo serial es obligatorio y único').not().isEmpty(),
