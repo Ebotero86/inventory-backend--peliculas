@@ -1,10 +1,12 @@
 const { Router } = require('express');
 const Tipo = require('../models/Tipo'); 
 const { validationResult, check } = require('express-validator');
+const { validateJWT } = require('../middleware/validate-jwt');
+const {validateRoleAdmin } = require('../middleware/validate-role-admin');
 
 const router = Router();
 
-router.post('/', [
+router.post('/', [validateJWT, validateRoleAdmin], [
     check('name', 'invalid.name').not().isEmpty(),
     check('description', 'invalid.description').not().isEmpty(),
 ], async function(req, res) {
@@ -29,7 +31,7 @@ router.post('/', [
     }
 });
 
-router.get('/', async function(req, res) {
+router.get('/', validateJWT, async function(req, res) {
     try {
         const tipos = await Tipo.find();
         res.send(tipos);
@@ -40,7 +42,7 @@ router.get('/', async function(req, res) {
     }
 });
 
-router.put('/:tipoId', [
+router.put('/:tipoId', validateJWT, [
     check('name', 'invalid.name').not().isEmpty(),
     check('description', 'invalid.description').not().isEmpty(),
 ], async function(req, res) {

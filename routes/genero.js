@@ -1,11 +1,12 @@
 const { Router } = require('express');
 const Genero = require('../models/Genero');
 const { validationResult, check } = require('express-validator');
-
+const { validateJWT } = require('../middleware/validate-jwt');
+const {validateRoleAdmin } = require('../middleware/validate-role-admin');
 
 const router = Router();
 
-router.post('/', [
+router.post('/', [validateJWT, validateRoleAdmin], [
     check('name', 'invalid.name').not().isEmpty(),
     check('state', 'invalid.state').isIn([ 'Activo', 'Inactivo' ]),
 ], async function(req, res) {
@@ -32,7 +33,7 @@ router.post('/', [
 
 });
 
-router.get('/', async function(req, res) {
+router.get('/', validateJWT, async function(req, res) {
     try {
         const genero = await Genero.find(); 
         res.send(genero);
@@ -43,7 +44,7 @@ router.get('/', async function(req, res) {
     }
 });
 
-router.put('/:generoId', [
+router.put('/:generoId', validateJWT, [
     check('name', 'invalid.name').not().isEmpty(),
     check('state', 'invalid.state').isIn([ 'Activo', 'Inactivo' ]),
 ], async function(req, res) {

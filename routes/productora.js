@@ -1,11 +1,13 @@
 const { Router } = require('express');
 const Productora = require('../models/Productora'); 
 const { validationResult, check } = require('express-validator');
+const { validateJWT } = require('../middleware/validate-jwt');
+const {validateRoleAdmin } = require('../middleware/validate-role-admin');
 
 const router = Router();
 
 
-router.post('/', [
+router.post('/', [validateJWT, validateRoleAdmin], [
     check('name', 'invalid.name').not().isEmpty(),
     check('state', 'invalid.state').isIn([ 'Activo', 'Inactivo' ]),
     check('description', 'invalid.description').not().isEmpty(),
@@ -37,7 +39,7 @@ router.post('/', [
 });
 
 
-router.get('/', async function(req, res) {
+router.get('/', validateJWT, async function(req, res) {
     try {
         const productora = await Productora.find();
         res.send(productora);
@@ -48,7 +50,7 @@ router.get('/', async function(req, res) {
     }
 });
 
-router.put('/:productoraId', [
+router.put('/:productoraId', validateJWT, [
     check('name', 'invalid.name').not().isEmpty(),
     check('state', 'invalid.state').isIn([ 'Activo', 'Inactivo' ]),
     check('description', 'invalid.description').not().isEmpty(),

@@ -1,11 +1,13 @@
 const { Router } = require('express');
 const Media = require('../models/Media'); 
 const { validationResult, check } = require('express-validator');
+const { validateJWT } = require('../middleware/validate-jwt');
+const {validateRoleAdmin } = require('../middleware/validate-role-admin');
 
 const router = Router();
 
 
-router.get('/', async function(req, res) {
+router.get('/', validateJWT, async function(req, res) {
     try {
         const media = await Media.find(); 
         res.send(media);
@@ -17,7 +19,7 @@ router.get('/', async function(req, res) {
 });
 
 
-router.post('/', [
+router.post('/', [validateJWT, validateRoleAdmin], [
     check('serial', 'El campo serial es obligatorio y único').not().isEmpty(),
     check('titulo', 'El campo título es obligatorio').not().isEmpty(),
     check('sinopsis', 'El campo sinopsis es obligatorio').not().isEmpty(),
@@ -72,7 +74,7 @@ router.post('/', [
 });
 
 
-router.get('/all', async function(req, res) {
+router.get('/all', validateJWT, async function(req, res) {
     try {
         const media = await Media.find().populate([
             {
@@ -96,7 +98,7 @@ router.get('/all', async function(req, res) {
     }
 });
 
-router.get('/:mediaId', async function(req, res) {
+router.get('/:mediaId', validateJWT, async function(req, res) {
     try {
       const media = await Media.findById(req.params.mediaId).populate([
         {
@@ -127,7 +129,7 @@ router.get('/:mediaId', async function(req, res) {
   
 
 
-router.put('/:mediaId', [
+router.put('/:mediaId', validateJWT, [
     check('serial', 'El campo serial es obligatorio y único').not().isEmpty(),
     check('titulo', 'El campo título es obligatorio').not().isEmpty(),
     check('sinopsis', 'El campo sinopsis es obligatorio').not().isEmpty(),
